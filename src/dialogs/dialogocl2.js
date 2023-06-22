@@ -10,5 +10,5 @@ function dialogocl2(client, message) {
       console.error("Erro ao enviar mensagem", error);
     });
 }
-
+ 
 module.exports = dialogocl2;

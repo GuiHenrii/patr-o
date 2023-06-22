@@ -11,4 +11,4 @@ async function dialogo1(client, message) {
     });
 }
 
-module.exports = dialogo1;
+module.exports = dialogo1; 

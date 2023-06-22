@@ -10,7 +10,7 @@ async function dialogoValor(client, message) {
       console.log("Mensagem enviada.");
     })
     .catch((error) => {
-      console.error("Erro ao enviar mensagem", error);
+      console.error("Erro ao enviar mensagem", error); 
     });
 
   function tratarData(data) {

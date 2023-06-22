@@ -10,3 +10,4 @@ async function dialogo9(client, message) {
     });
 }
 module.exports = dialogo9;
+ 

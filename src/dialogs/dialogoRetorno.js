@@ -10,4 +10,4 @@ async function dialogoRetorno(client, message) {
       console.error("Erro ao enviar mensagem", error);
     });
 }
-module.exports = dialogoRetorno;
+module.exports = dialogoRetorno;   

@@ -12,7 +12,7 @@ async function dialogoComprar(client, message) {
     })
     .catch((error) => {
       console.error("Erro ao enviar mensagem", error);
-    });
+    }); 
 
 
     function tratarData(data) {

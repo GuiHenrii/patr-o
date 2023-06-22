@@ -9,7 +9,7 @@ async function dialogoinicio(client, message) {
     })
     .catch((erro) => {
       console.error("Erro ao enviar mensagem ", erro); //return object error
-    });
+    }); 
 }
 
 module.exports = dialogoinicio;

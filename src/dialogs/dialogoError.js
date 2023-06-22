@@ -11,3 +11,4 @@ async function dialogoError (client, message) {
   };
 
   module.exports = dialogoError;
+ 

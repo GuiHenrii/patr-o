@@ -12,3 +12,4 @@ async function dialogoencerra(client, message) {
 }
 
 module.exports = dialogoencerra;
+ 
