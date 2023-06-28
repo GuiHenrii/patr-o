@@ -1,4 +1,4 @@
-const venom = require("venom-bot"); 
+const venom = require("venom-bot");
 const fs = require("fs");
 const moment = require("moment");
 const path = require("path");
@@ -16,9 +16,10 @@ const dialogocomprar = require("./dialogs/dialogocomprar.js");
 const dialogoatendente = require("./dialogs/dialogoatendente.js");
 const dialogoencerra = require("./dialogs/dialogoencerra.js");
 const dialogoError = require("./dialogs/dialogoError.js");
-const dialogonNome = require("./dialogs/dialogoNome.js");
+const dialogoLink = require("./dialogs/dialogoLink.js");
+const dialogoPasseio = require("./dialogs/dialogoPasseio.js");
 const { Console } = require("console");
-//import dialogo6 require() "./dialogs/dialogo6.js";
+
 const date = new Date();
 const horario = fs.readFileSync("./imagens/horario.PNG");
 
@@ -84,7 +85,12 @@ function start(client) {
       //  -------------------- Envia o os horarios de onibus
       else if (message.body === "1" && atendimento[tel].stage === 2) {
         client
-          .sendImage(message.from, "./imagens/horario.png", "image-name", "")
+          .sendImage(
+            message.from,
+            "./imagens/horario.png",
+            "image-name",
+            "Digite *'Ok'* para voltar ao menu inicial"
+          )
           .then((result) => {
             console.log("Result: ", result); //return object success
           })
@@ -95,7 +101,12 @@ function start(client) {
       //  -------------------- Envia os Valores
       else if (message.body === "2" && atendimento[tel].stage === 2) {
         client
-          .sendImage(message.from, "./imagens/valor.png", "image-name", "")
+          .sendImage(
+            message.from,
+            "./imagens/valor.png",
+            "image-name",
+            "Digite *'Ok'* para voltar ao menu inicial"
+          )
           .then((result) => {
             console.log("Result: ", result); //return object success
           })
@@ -105,8 +116,8 @@ function start(client) {
       }
       //  -------------------- Faz a pergunta da data
       else if (message.body === "3" && atendimento[tel].stage === 2) {
-        dialogo2(client, message);
-        atendimento[tel].stage = 5;
+        dialogoLink(client, message);
+        atendimento[tel].stage = 1;
       }
       //Pacote de viagens
       else if (message.body === "4" && atendimento[tel].stage === 2) {
@@ -137,7 +148,11 @@ function start(client) {
       }
       //  -------------------- Faz abertura para aluguel
       else if (message.body === "5" && atendimento[tel].stage === 2) {
-        dialogoatendente(client, message);
+        dialogoNome(client, message);
+        atendimento[tel].stage = 16;
+      } else if (message.body && atendimento[tel].stage === 16) {
+        dialogoPasseio(client, message);
+        atendimento[tel].stage = 15;
       }
       // Cria link de pesquisa pra o cliente
       else if (message.body && atendimento[tel].stage === 3) {
@@ -153,7 +168,7 @@ function start(client) {
       else if (message.body === "6" && atendimento[tel].stage === 2) {
         atendimento.end = message.body;
         dialogoatendente(client, message);
-        atendimento[tel].stage = 6;
+        atendimento[tel].stage = 15;
         //manda pro administrativo
       } else if (message.body === "7" && atendimento[tel].stage === 2) {
         atendimento.end = message.body;
