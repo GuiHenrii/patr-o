@@ -55,8 +55,18 @@ function start(client) {
   }
 
   client.onMessage((message) => {
-    // Se não é de grupo(false) executa o codigo:
-    if (message.isGroupMsg === false) {
+    console.log(message);
+    const messageDate = new Date(message.timestamp * 1000);
+    console.log(messageDate);
+    const data = new Date();
+    console.log(data);
+    const dataFormat = moment(data).format("YYYY-MM-DD");
+    const datamessageFormat = moment(messageDate).format("YYYY-MM-DD");
+    console.log(datamessageFormat);
+    console.log(dataFormat);
+
+    // Se não é de grupo(false) executa o codigo e compara a data
+    if (dataFormat === datamessageFormat && message.isGroupMsg === false) {
       // Monta a constante para o objeto
       const tel = message.from;
 
