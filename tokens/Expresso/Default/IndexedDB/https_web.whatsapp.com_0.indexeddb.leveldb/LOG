@@ -1,0 +1,22 @@
+2023/07/01-09:52:58.273 35bc Reusing MANIFEST C:\Users\55649\Desktop\A2M\luxo\expresso\tokens\Expresso\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2023/07/01-09:52:58.273 35bc Recovering log #170
+2023/07/01-09:52:58.294 35bc Reusing old log C:\Users\55649\Desktop\A2M\luxo\expresso\tokens\Expresso\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000170.log 
+2023/07/01-09:53:56.936 35bc Level-0 table #180: started
+2023/07/01-09:53:56.974 35bc Level-0 table #180: 1297812 bytes OK
+2023/07/01-09:53:56.980 35bc Delete type=0 #170
+2023/07/01-09:54:01.743 3e20 Compacting 1@1 + 6@2 files
+2023/07/01-09:54:01.800 3e20 Generated table #181@1: 48452 keys, 2227821 bytes
+2023/07/01-09:54:01.838 3e20 Generated table #182@1: 7996 keys, 2157380 bytes
+2023/07/01-09:54:01.886 3e20 Generated table #183@1: 26805 keys, 2195827 bytes
+2023/07/01-09:54:01.945 3e20 Generated table #184@1: 69915 keys, 2209571 bytes
+2023/07/01-09:54:02.031 3e20 Generated table #185@1: 116173 keys, 2269134 bytes
+2023/07/01-09:54:02.083 3e20 Generated table #186@1: 84232 keys, 1645220 bytes
+2023/07/01-09:54:02.083 3e20 Compacted 1@1 + 6@2 files => 12704953 bytes
+2023/07/01-09:54:02.087 3e20 compacted to: files[ 0 0 6 0 0 0 0 ]
+2023/07/01-09:54:02.088 3e20 Delete type=2 #172
+2023/07/01-09:54:02.088 3e20 Delete type=2 #173
+2023/07/01-09:54:02.088 3e20 Delete type=2 #174
+2023/07/01-09:54:02.088 3e20 Delete type=2 #175
+2023/07/01-09:54:02.088 3e20 Delete type=2 #176
+2023/07/01-09:54:02.088 3e20 Delete type=2 #177
+2023/07/01-09:54:02.088 3e20 Delete type=2 #180

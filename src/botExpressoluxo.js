@@ -129,8 +129,16 @@ function start(client) {
         dialogoLink(client, message);
         atendimento[tel].stage = 1;
       }
-      //Pacote de viagens
+      //aluguel de onibus
       else if (message.body === "4" && atendimento[tel].stage === 2) {
+        atendimento.cliente = message.body;
+        dialogoatendente(client, message);
+        atendimento[tel].stage = 170;
+      } else if (message.body && atendimento[tel].stage === 170) {
+        atendimento[tel].stage = 170;
+      }
+      //  -------------------- Faz abertura para pacote de viagens
+      else if (message.body === "5" && atendimento[tel].stage === 2) {
         atendimento.cliente = message.body;
         dialogoNome(client, message);
         atendimento[tel].stage = 10;
@@ -154,37 +162,24 @@ function start(client) {
         atendimento[tel].stage = 15;
       } else if (message.body && atendimento[tel].stage === 15) {
         dialogoatendente(client, message);
-        atendimento[tel].stage = 15;
-      }
-      //  -------------------- Faz abertura para aluguel
-      else if (message.body === "5" && atendimento[tel].stage === 2) {
-        dialogoNome(client, message);
-        atendimento[tel].stage = 16;
-      } else if (message.body && atendimento[tel].stage === 16) {
-        dialogoPasseio(client, message);
-        atendimento[tel].stage = 15;
-      }
-      // Cria link de pesquisa pra o cliente
-      else if (message.body && atendimento[tel].stage === 3) {
-        dialogoPassagem(client, message);
-        atendimento[tel].stage = 1;
-      }
-      // Cria link de pesquisa de compra para o cliente
-      else if (message.body && atendimento[tel].stage === 5) {
-        dialogocomprar(client, message);
-        atendimento[tel].stage = 6;
+        atendimento[tel].stage = 20;
+      } else if (message.body && atendimento[tel].stage === 20) {
+        atendimento[tel].stage = 170;
       }
       // ---------- manda pro suporte
       else if (message.body === "6" && atendimento[tel].stage === 2) {
         atendimento.end = message.body;
         dialogoatendente(client, message);
-        atendimento[tel].stage = 15;
+        atendimento[tel].stage = 17;
         //manda pro administrativo
+      } else if (message.body && atendimento[tel].stage === 17) {
+        atendimento[tel].stage = 170;
       } else if (message.body === "7" && atendimento[tel].stage === 2) {
         atendimento.end = message.body;
         dialogoatendente(client, message);
-        atendimento[tel].stage = 7;
-        //encerra o atendimento
+        atendimento[tel].stage = 18;
+      } else if (message.body && atendimento[tel].stage === 18) {
+        atendimento[tel].stage = 170;
       } else if (message.body === "8" && atendimento[tel].stage === 2) {
         atendimento.end = message.body;
         dialogoencerra(client, message);
