@@ -26,10 +26,7 @@ const horario = fs.readFileSync("./imagens/horario.PNG");
 
 const contatos = JSON.parse(fs.readFileSync("contatos.json", "utf8"));
 
-
-function reiniciarAtendimento() {
-  
-
+async function reiniciarAtendimento() {
   // Lê o arquivo atendimento.json
   fs.readFile('atendimentos.json', 'utf8', (err, data) => {
     if (err) {
@@ -39,26 +36,37 @@ function reiniciarAtendimento() {
 
     try {
       const atendimento = JSON.parse(data);
-      atendimento.stage = 1
-      //criar a função para atualizar o stage atendimento.json
-      //chamar um dialogo que vai informar que o atendimento foi reiniciado
-      dialogoreiniciar(client,message);
-      
-      console.log('Atendimentos reiniciado:', atendimento);
+      atendimento.stage = 1;
+
+      // Atualiza o arquivo atendimentos.json com o novo valor do stage
+      fs.writeFile('atendimentos.json', JSON.stringify(atendimento), 'utf8', (err) => {
+        if (err) {
+          console.error('Erro ao atualizar o arquivo atendimentos.json:', err);
+          return;
+        }
+        console.log('Arquivo atendimentos.json atualizado com sucesso:', atendimento);
+        // Aqui você pode chamar a função de diálogo que informa que o atendimento foi reiniciado
+        dialogoreiniciar(client, message);
+      });
     } catch (error) {
       console.error('Erro ao processar o arquivo atendimentos.json:', error);
     }
   });
-      
 
-  // Define o tempo para reiniciar o atendimento 
-  const tempoReiniciar = 500000; // 5 minuto
+  // Define o tempo para reiniciar o atendimento
+  const tempoReiniciar = 500000; // 5 minutos
 
   setTimeout(reiniciarAtendimento, tempoReiniciar);
 }
 
 // Inicia o processo de reiniciamento
 reiniciarAtendimento();
+function salvaContato(tempObj) {
+  console.log("Início da função salvaContato");
+  console.log("Objeto recebido:", tempObj);
+  dialogoreiniciar(client, mess)
+}
+
 
 function start(client) {
   console.log("Cliente Venom iniciado!");
@@ -76,8 +84,6 @@ function start(client) {
     const datamessageFormat = moment(messageDate).format("YYYY-MM-DD");
     console.log(datamessageFormat);
     console.log(dataFormat);
-
-
 
     // Se não é de grupo(false) executa o codigo e compara a data
     if (dataFormat === datamessageFormat && message.isGroupMsg === false) {
@@ -243,27 +249,27 @@ venom
   .catch((erro) => {
     console.log(erro);
   });
-  function salvaContato(tempObj) {
-    console.log("Início da função salvaContato");
-    console.log("Objeto recebido:", tempObj);
+function salvaContato(tempObj) {
+  console.log("Início da função salvaContato");
+  console.log("Objeto recebido:", tempObj);
 
-    fs.readFile("atendimentos.json", "utf8", (err, data) => {
+  fs.readFile("atendimentos.json", "utf8", (err, data) => {
+    if (err) {
+      console.error("Erro ao ler o arquivo atendimentos.json", err);
+      return;
+    }
+    console.log("Arquivo atendimentos.json lido com sucesso");
+    const atendimentos = JSON.parse(data);
+    //nova função para atualizar stage no atendimento
+    atendimentos.push(tempObj);
+
+    const json = JSON.stringify(atendimentos, null, 2);
+    fs.writeFile("atendimentos.json", json, "utf8", (err) => {
       if (err) {
-        console.error("Erro ao ler o arquivo atendimentos.json", err);
+        console.error("Erro ao escrever o arquivo atendimentos.json", err);
         return;
       }
-      console.log("Arquivo atendimentos.json lido com sucesso");
-      const atendimentos = JSON.parse(data);
-//nova função para atualizar stage no atendimento
-      atendimentos.push(tempObj);
-
-      const json = JSON.stringify(atendimentos, null, 2);
-      fs.writeFile("atendimentos.json", json, "utf8", (err) => {
-        if (err) {
-          console.error("Erro ao escrever o arquivo atendimentos.json", err);
-          return;
-        }
-        console.log("Arquivo atendimentos.json salvo com sucesso");
-      });
+      console.log("Arquivo atendimentos.json salvo com sucesso");
     });
-  }
+  });
+};
