@@ -1,6 +1,6 @@
 async function dialogoreiniciar(client, message) {
   const texto =
-    "*Devido a falta de resposta. Vamos reiniciar o seu atendimento.";
+    "*Devido a falta de resposta, Vamos encerrar o seu atendimento caso queira continuar seu atendimento envie uma nova mensagem.";
   await client
     .sendText(message.from, texto)
     .then(() => {

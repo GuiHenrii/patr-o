@@ -1,7 +1,14 @@
+// Funcionais
 const venom = require("venom-bot");
 const fs = require("fs");
 const moment = require("moment");
 const path = require("path");
+const { Console } = require("console");
+const schedule = require("node-schedule");
+const conn = require("./db/conn");
+const Sequelize = require("sequelize");
+
+// Dialogos
 const dialogoinicio = require("./dialogs/dialogoinicio.js");
 const dialogoNome = require("./dialogs/dialogoNome.js");
 const dialogoTel = require("./dialogs/dialogoTel.js");
@@ -18,103 +25,104 @@ const dialogoencerra = require("./dialogs/dialogoencerra.js");
 const dialogoError = require("./dialogs/dialogoError.js");
 const dialogoLink = require("./dialogs/dialogoLink.js");
 const dialogoPasseio = require("./dialogs/dialogoPasseio.js");
-const { Console } = require("console");
 const dialogoreiniciar = require("./dialogs/dialogoreiniciar.js");
+const updateStage = require("./functions/update.js");
+
+// Models
+const Cliente = require("./models/chat.js");
 
 const date = new Date();
 const horario = fs.readFileSync("./imagens/horario.PNG");
 
 const contatos = JSON.parse(fs.readFileSync("contatos.json", "utf8"));
 
-async function reiniciarAtendimento() {
-  // Lê o arquivo atendimento.json
-  fs.readFile('atendimentos.json', 'utf8', (err, data) => {
-    if (err) {
-      console.error('Erro ao ler o arquivo atendimentos.json:', err);
-      return;
-    }
-
-    try {
-      const atendimento = JSON.parse(data);
-      atendimento.stage = 1;
-
-      // Atualiza o arquivo atendimentos.json com o novo valor do stage
-      fs.writeFile('atendimentos.json', JSON.stringify(atendimento), 'utf8', (err) => {
-        if (err) {
-          console.error('Erro ao atualizar o arquivo atendimentos.json:', err);
-          return;
-        }
-        console.log('Arquivo atendimentos.json atualizado com sucesso:', atendimento);
-        // Aqui você pode chamar a função de diálogo que informa que o atendimento foi reiniciado
-        dialogoreiniciar(client, message);
-      });
-    } catch (error) {
-      console.error('Erro ao processar o arquivo atendimentos.json:', error);
-    }
-  });
-
-  // Define o tempo para reiniciar o atendimento
-  const tempoReiniciar = 500000; // 5 minutos
-
-  setTimeout(reiniciarAtendimento, tempoReiniciar);
+async function reiniciarAtendimento(id, client, message) {
+  const stage = 1;
+  // Atualiza estado do cliente
+  await Cliente.update({ stage }, { where: { id: id } });
+  dialogoreiniciar(client, message);
 }
 
-// Inicia o processo de reiniciamento
-reiniciarAtendimento();
 function salvaContato(tempObj) {
   console.log("Início da função salvaContato");
   console.log("Objeto recebido:", tempObj);
-  dialogoreiniciar(client, mess)
+  dialogoreiniciar(client, mess);
 }
-
-
 function start(client) {
   console.log("Cliente Venom iniciado!");
-
   // Inicio atendimento
   const atendimento = {};
 
-  client.onMessage((message) => {
-    console.log(message);
+  // schedule.scheduleJob("*/15 * * * * *", async () => {
+  //   const cliente = await Cliente.findAll();
+  //   if (!cliente) {
+  //     console.log("Não tem cliente cadastrado");
+  //     return;
+  //   }else{
+  //for (const cliente of cliente){
+  // const horaUltimoMensagem = new Date(cliente.date * 1000);
+  // console.log(horaUltimoMensagem);
+  // const horaFormatada = horaUltimoMensagem.getHours();
+  // // Adicionar 5 minutos à horaUltimoMensagem
+  // const deu5Minutos = horaUltimoMensagem.setMinutes(
+  //   horaUltimoMensagem.getMinutes() + 5
+  // );
+  //
+  // // Verificar se já se passaram 5 minutos
+
+  // if (horaFormatada >= deu5Minutos) {
+  //   reiniciarAtendimento();
+  //   return;
+  // }
+  // }
+  // });
+
+  client.onMessage(async (message) => {
     const messageDate = new Date(message.timestamp * 1000);
-    console.log(messageDate);
     const data = new Date();
-    console.log(data);
     const dataFormat = moment(data).format("YYYY-MM-DD");
     const datamessageFormat = moment(messageDate).format("YYYY-MM-DD");
-    console.log(datamessageFormat);
-    console.log(dataFormat);
-
-    // Se não é de grupo(false) executa o codigo e compara a data
     if (dataFormat === datamessageFormat && message.isGroupMsg === false) {
-      // Monta a constante para o objeto
-      const tel = message.from;
+      // Se não é de grupo(false) executa o codigo e compara a data
 
-      if (!atendimento[tel]) {
-        console.log("Creating new atendimento entry");
+      // Pesquisa e deixa o cliente pronto para os update
+      const tel = message.from.replace(/@c\.us/g, "");
+      const cliente = await Cliente.findOne({
+        raw: true,
+        where: { telefone: tel },
+      });
+      console.dir(cliente);
 
-        let stage = 1;
-
-        atendimento[tel] = {
-          tel: tel,
-          cliente: [],
-          passagem: [],
-          dataida: [],
-          comprar: [],
-          destino: [],
-          stage: stage, // Define em qual Else if o cliente esta. Controla a msg
+      // Entra nesse if caso o cliente não exista no banco de dados
+      if (!cliente) {
+        console.log("Novo atendimento criado");
+        const dados = {
+          nome: message.notifyName,
+          telefone: tel,
+          assunto: "contato Whatsapp",
+          atendido: 1,
+          stage: 1,
+          date: message.timestamp, //Verificar se ele trás a hora
         };
-        salvaContato(atendimento[tel]);
-        console.log("New atendimento entry created:", atendimento[tel]);
-      }
-
-      //  ---------- Inicio da conversa
-      if (message.body && atendimento[tel].stage === 1) {
+        const cliente = await Cliente.create(dados);
         dialogoinicio(client, message);
-        atendimento[tel].stage = 2;
+        const id = cliente.id;
+        const dialogo = "dialogoinicio";
+        const stage = 2;
+        const date = message.notifyName;
+        updateStage(id, stage, date);
+      }
+      //  ---------- Inicio da conversa
+      else if (message.body && cliente.stage === 1) {
+        dialogoinicio(client, message);
+        const id = cliente.id;
+        const dialogo = "dialogoinicio";
+        const stage = 2;
+        const date = message.notifyName;
+        updateStage(id, stage, date);
       }
       //  -------------------- Envia o os horarios de onibus
-      else if (message.body === "1" && atendimento[tel].stage === 2) {
+      else if (message.body === "1" && cliente.stage === 2) {
         client
           .sendImage(
             message.from,
@@ -130,7 +138,7 @@ function start(client) {
           });
       }
       //  -------------------- Envia os Valores
-      else if (message.body === "2" && atendimento[tel].stage === 2) {
+      else if (message.body === "2" && cliente.stage === 2) {
         client
           .sendImage(
             message.from,
@@ -146,70 +154,129 @@ function start(client) {
           });
       }
       //  -------------------- Faz a pergunta da data
-      else if (message.body === "3" && atendimento[tel].stage === 2) {
+      else if (message.body === "3" && cliente.stage === 2) {
         dialogoLink(client, message);
-        atendimento[tel].stage = 1;
+        const id = cliente.id;
+        const dialogo = "dialogolink";
+        const stage = 2;
+        const date = message.notifyName;
+        updateStage(id, stage, date);
       }
       //aluguel de onibus
-      else if (message.body === "4" && atendimento[tel].stage === 2) {
+      else if (message.body === "4" && cliente.stage === 2) {
         atendimento.cliente = message.body;
         dialogoatendente(client, message);
-        atendimento[tel].stage = 170;
-      } else if (message.body && atendimento[tel].stage === 170) {
-        atendimento[tel].stage = 170;
+        const id = cliente.id;
+        const dialogo = "dialogoatendente";
+        const stage = 170;
+        const date = message.notifyName;
+        updateStageStage(id, stage, date);
+      } else if (message.body && cliente.stage === 170) {
+        const id = cliente.id;
+        const dialogo = "";
+        const stage = 170;
+        const date = message.notifyName;
       }
       //  -------------------- Faz abertura para pacote de viagens
-      else if (message.body === "5" && atendimento[tel].stage === 2) {
+      else if (message.body === "5" && cliente.stage === 2) {
         atendimento.cliente = message.body;
         dialogoNome(client, message);
-        atendimento[tel].stage = 10;
-      } else if (message.body && atendimento[tel].stage === 10) {
+        const id = cliente.id;
+        const dialogo = "dialogoNome";
+        const stage = 10;
+        const date = message.notifyName;
+        updateStage(id, stage, date);
+      } else if (message.body && cliente.stage === 10) {
         dialogoTel(client, message);
-        atendimento[tel].stage = 4;
-      } else if (message.body && atendimento[tel].stage === 4) {
+        const id = cliente.id;
+        const dialogo = "dialogoTel";
+        const stage = 4;
+        const date = message.notifyName;
+        updateStage(id, stage, date);
+      } else if (message.body && cliente.stage === 4) {
         dialogoSaida(client, message);
-        atendimento[tel].stage = 5;
-      } else if (message.body && atendimento[tel].stage === 5) {
+        const id = cliente.id;
+        const dialogo = "dialogoSaida";
+        const stage = 5;
+        const date = message.notifyName;
+        updateStage(id, stage, date);
+      } else if (message.body && cliente.stage === 5) {
         dialogoRetorno(client, message);
-        atendimento[tel].stage = 6;
+        const id = cliente.id;
+        const dialogo = "dialogoRetorno";
+        const stage = 6;
+        const date = message.notifyName;
+        updateStage(id, stage, date);
       }
       //
-      else if (message.body && atendimento[tel].stage === 6) {
+      else if (message.body && cliente.stage === 6) {
         dialogoOrigem(client, message);
-        atendimento[tel].stage = 7;
-        //chama o end acaso não queira mais nada
-      } else if (message.body && atendimento[tel].stage === 7) {
+        const id = cliente.id;
+        const dialogo = "dialogoOrigem";
+        const stage = 7;
+        const date = message.notifyName;
+        updateStage(id, stage, date);
+      } else if (message.body && cliente.stage === 7) {
         dialogoDestino(client, message);
-        atendimento[tel].stage = 15;
-      } else if (message.body && atendimento[tel].stage === 15) {
+        const id = cliente.id;
+        const dialogo = "dialogoDestino";
+        const stage = 15;
+        const date = message.notifyName;
+        updateStage(id, stage, date);
+      } else if (message.body && cliente.stage === 15) {
         dialogoatendente(client, message);
-        atendimento[tel].stage = 20;
-      } else if (message.body && atendimento[tel].stage === 20) {
-        atendimento[tel].stage = 170;
+        const id = cliente.id;
+        const dialogo = "dialogoatendente";
+        const stage = 20;
+        const date = message.notifyName;
+        updateStage(id, stage, date);
+      } else if (message.body && cliente.stage === 20) {
+        const id = cliente.id;
+        const dialogo = "";
+        const stage = 170;
+        const date = message.notifyName;
       }
       // ---------- manda pro suporte
-      else if (message.body === "6" && atendimento[tel].stage === 2) {
+      else if (message.body === "6" && cliente.stage === 2) {
         atendimento.end = message.body;
         dialogoatendente(client, message);
-        atendimento[tel].stage = 17;
+        const id = cliente.id;
+        const dialogo = "dialogoatendente";
+        const stage = 17;
+        const date = message.notifyName;
+        updateStage(id, stage, date);
         //manda pro administrativo
-      } else if (message.body && atendimento[tel].stage === 17) {
-        atendimento[tel].stage = 170;
-      } else if (message.body === "7" && atendimento[tel].stage === 2) {
+      } else if (message.body && cliente.stage === 17) {
+        const id = cliente.id;
+        const dialogo = "";
+        const stage = 170;
+        const date = message.notifyName;
+      } else if (message.body === "7" && cliente.stage === 2) {
         atendimento.end = message.body;
         dialogoatendente(client, message);
-        atendimento[tel].stage = 18;
-      } else if (message.body && atendimento[tel].stage === 18) {
-        atendimento[tel].stage = 170;
-      } else if (message.body === "8" && atendimento[tel].stage === 2) {
+        const id = cliente.id;
+        const dialogo = "dialogoatendente";
+        const stage = 18;
+        const date = message.notifyName;
+        updateStage(id, stage, date);
+      } else if (message.body && cliente.stage === 18) {
+        const id = cliente.id;
+        const dialogo = "";
+        const stage = 170;
+        const date = message.notifyName;
+      } else if (message.body === "8" && cliente.stage === 2) {
         atendimento.end = message.body;
         dialogoencerra(client, message);
-        atendimento[tel].stage = 1;
+        const id = cliente.id;
+        const dialogo = "dialogoencerra";
+        const stage = 1;
+        const date = message.notifyName;
+        updateStage(id, stage, date);
       }
 
       // ---------------- joga o link pra comprar passagem-----------------
-      else if (message.body === "1" && atendimento[tel].stage === 4) {
-        atendimento[tel].passagem = message.body;
+      else if (message.body === "1" && cliente.stage === 4) {
+        // atendimento[tel].passagem = message.body;
         const textomensagem =
           "Acesse o link para efetuar a compra da sua passagem:\nhttps://www.buson.com.br/viacao/expresso-de-luxo-mg";
         client
@@ -220,12 +287,21 @@ function start(client) {
           .catch((error) => {
             console.error("Error when sending message", error);
           });
-        atendimento[tel].stage = 3;
+        const id = cliente.id;
+        const dialogo = "";
+        const stage = 3;
+        const date = message.notifyName;
+        updateStage(id, stage, date);
       }
       // --------------------- Final do ajuste ---------------
       // Caso algo de errado
       else {
-        atendimento[tel].stage = 1;
+        const id = cliente.id;
+        const dialogo = "";
+        const stage = 1;
+        const date = message.notifyName;
+        updateStage(id, stage, date);
+
         const texto =
           "Vamos reiniciar o seu atendimento, Por favor digite 'OK'";
         client
@@ -245,10 +321,11 @@ venom
   .create({
     session: "Expresso", //name of session
   })
-  .then((client) => start(client, 0))
+  .then((client) => start(client))
   .catch((erro) => {
     console.log(erro);
   });
+
 function salvaContato(tempObj) {
   console.log("Início da função salvaContato");
   console.log("Objeto recebido:", tempObj);
@@ -272,4 +349,8 @@ function salvaContato(tempObj) {
       console.log("Arquivo atendimentos.json salvo com sucesso");
     });
   });
-};
+}
+conn
+  .sync()
+  .then(() => {})
+  .catch((err) => console.log(err));
