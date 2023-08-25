@@ -26,7 +26,9 @@ const dialogoError = require("./dialogs/dialogoError.js");
 const dialogoLink = require("./dialogs/dialogoLink.js");
 const dialogoPasseio = require("./dialogs/dialogoPasseio.js");
 const dialogoreiniciar = require("./dialogs/dialogoreiniciar.js");
-const updateStage = require("./functions/update.js");
+
+//functions
+const atualizaStage = require("./functions/stage.js");
 
 // Models
 const Cliente = require("./models/chat.js");
@@ -78,6 +80,10 @@ function start(client) {
   // });
 
   client.onMessage(async (message) => {
+    if (message.from === "status@broadcast") {
+      console.log("contato lista de transmissão");
+      return;
+    }
     const messageDate = new Date(message.timestamp * 1000);
     const data = new Date();
     const dataFormat = moment(data).format("YYYY-MM-DD");
@@ -109,8 +115,8 @@ function start(client) {
         const id = cliente.id;
         const dialogo = "dialogoinicio";
         const stage = 2;
-        const date = message.notifyName;
-        updateStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
       }
       //  ---------- Inicio da conversa
       else if (message.body && cliente.stage === 1) {
@@ -118,8 +124,8 @@ function start(client) {
         const id = cliente.id;
         const dialogo = "dialogoinicio";
         const stage = 2;
-        const date = message.notifyName;
-        updateStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
       }
       //  -------------------- Envia o os horarios de onibus
       else if (message.body === "1" && cliente.stage === 2) {
@@ -144,7 +150,7 @@ function start(client) {
             message.from,
             "./imagens/valor.png",
             "image-name",
-            "Digite *'Ok'* para voltar ao menu inicial"
+            "Digite *'OK'* para voltar ao menu inicial"
           )
           .then((result) => {
             console.log("Result: ", result); //return object success
@@ -159,8 +165,8 @@ function start(client) {
         const id = cliente.id;
         const dialogo = "dialogolink";
         const stage = 2;
-        const date = message.notifyName;
-        updateStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
       }
       //aluguel de onibus
       else if (message.body === "4" && cliente.stage === 2) {
@@ -169,13 +175,13 @@ function start(client) {
         const id = cliente.id;
         const dialogo = "dialogoatendente";
         const stage = 170;
-        const date = message.notifyName;
-        updateStageStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
       } else if (message.body && cliente.stage === 170) {
         const id = cliente.id;
         const dialogo = "";
         const stage = 170;
-        const date = message.notifyName;
+        const date = message.timestamp;
       }
       //  -------------------- Faz abertura para pacote de viagens
       else if (message.body === "5" && cliente.stage === 2) {
@@ -184,29 +190,29 @@ function start(client) {
         const id = cliente.id;
         const dialogo = "dialogoNome";
         const stage = 10;
-        const date = message.notifyName;
-        updateStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
       } else if (message.body && cliente.stage === 10) {
         dialogoTel(client, message);
         const id = cliente.id;
         const dialogo = "dialogoTel";
         const stage = 4;
-        const date = message.notifyName;
-        updateStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
       } else if (message.body && cliente.stage === 4) {
         dialogoSaida(client, message);
         const id = cliente.id;
         const dialogo = "dialogoSaida";
         const stage = 5;
-        const date = message.notifyName;
-        updateStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
       } else if (message.body && cliente.stage === 5) {
         dialogoRetorno(client, message);
         const id = cliente.id;
         const dialogo = "dialogoRetorno";
         const stage = 6;
-        const date = message.notifyName;
-        updateStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
       }
       //
       else if (message.body && cliente.stage === 6) {
@@ -214,27 +220,27 @@ function start(client) {
         const id = cliente.id;
         const dialogo = "dialogoOrigem";
         const stage = 7;
-        const date = message.notifyName;
-        updateStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
       } else if (message.body && cliente.stage === 7) {
         dialogoDestino(client, message);
         const id = cliente.id;
         const dialogo = "dialogoDestino";
         const stage = 15;
-        const date = message.notifyName;
-        updateStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
       } else if (message.body && cliente.stage === 15) {
         dialogoatendente(client, message);
         const id = cliente.id;
         const dialogo = "dialogoatendente";
         const stage = 20;
-        const date = message.notifyName;
-        updateStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
       } else if (message.body && cliente.stage === 20) {
         const id = cliente.id;
         const dialogo = "";
         const stage = 170;
-        const date = message.notifyName;
+        const date = message.timestamp;
       }
       // ---------- manda pro suporte
       else if (message.body === "6" && cliente.stage === 2) {
@@ -243,35 +249,35 @@ function start(client) {
         const id = cliente.id;
         const dialogo = "dialogoatendente";
         const stage = 17;
-        const date = message.notifyName;
-        updateStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
         //manda pro administrativo
       } else if (message.body && cliente.stage === 17) {
         const id = cliente.id;
         const dialogo = "";
         const stage = 170;
-        const date = message.notifyName;
+        const date = message.timestamp;
       } else if (message.body === "7" && cliente.stage === 2) {
         atendimento.end = message.body;
         dialogoatendente(client, message);
         const id = cliente.id;
         const dialogo = "dialogoatendente";
         const stage = 18;
-        const date = message.notifyName;
-        updateStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
       } else if (message.body && cliente.stage === 18) {
         const id = cliente.id;
         const dialogo = "";
         const stage = 170;
-        const date = message.notifyName;
+        const date = message.timestamp;
       } else if (message.body === "8" && cliente.stage === 2) {
         atendimento.end = message.body;
         dialogoencerra(client, message);
         const id = cliente.id;
         const dialogo = "dialogoencerra";
         const stage = 1;
-        const date = message.notifyName;
-        updateStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
       }
 
       // ---------------- joga o link pra comprar passagem-----------------
@@ -290,8 +296,8 @@ function start(client) {
         const id = cliente.id;
         const dialogo = "";
         const stage = 3;
-        const date = message.notifyName;
-        updateStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
       }
       // --------------------- Final do ajuste ---------------
       // Caso algo de errado
@@ -299,8 +305,8 @@ function start(client) {
         const id = cliente.id;
         const dialogo = "";
         const stage = 1;
-        const date = message.notifyName;
-        updateStage(id, stage, date);
+        const date = message.timestamp;
+        atualizaStage(id, stage, date);
 
         const texto =
           "Vamos reiniciar o seu atendimento, Por favor digite 'OK'";
