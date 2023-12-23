@@ -1,7 +1,7 @@
 const { Sequelize } = require("sequelize");
 
 const sequelize = new Sequelize("expresso", "root", "", {
-  host: "localhost",
+  host: "root",
   dialect: "mysql",
 });
 

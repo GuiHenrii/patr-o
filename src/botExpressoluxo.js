@@ -34,7 +34,6 @@ const atualizaStage = require("./functions/stage.js");
 const Cliente = require("./models/chat.js");
 
 const date = new Date();
-const horario = fs.readFileSync("./imagens/horario.PNG");
 
 const contatos = JSON.parse(fs.readFileSync("contatos.json", "utf8"));
 
@@ -70,7 +69,7 @@ function start(client) {
   //   horaUltimoMensagem.getMinutes() + 5
   // );
   //
-  // // Verificar se já se passaram 5 minutos
+  // // Verifica se já se passaram 5 minutos
 
   // if (horaFormatada >= deu5Minutos) {
   //   reiniciarAtendimento();
@@ -132,7 +131,7 @@ function start(client) {
         client
           .sendImage(
             message.from,
-            "./imagens/horario.png",
+            "./imagens/hora.png",
             "image-name",
             "Digite *'Ok'* para voltar ao menu inicial"
           )
@@ -333,7 +332,7 @@ venom
   });
 
 function salvaContato(tempObj) {
-  console.log("Início da função salvaContato");
+  console.log("Início da função salvaContatos");
   console.log("Objeto recebido:", tempObj);
 
   fs.readFile("atendimentos.json", "utf8", (err, data) => {
