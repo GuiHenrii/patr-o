@@ -1,3 +1,2 @@
-2023/12/12-06:48:18.990 84 Reusing MANIFEST D:\A2M\luxo\expresso\tokens\Expresso\Default\Local Storage\leveldb/MANIFEST-000001
-2023/12/12-06:48:18.991 84 Recovering log #3
-2023/12/12-06:48:18.992 84 Reusing old log D:\A2M\luxo\expresso\tokens\Expresso\Default\Local Storage\leveldb/000003.log 
+2024/01/18-23:58:10.802 2ce0 Creating DB D:\A2M\luxo\expresso\tokens\Expresso\Default\Local Storage\leveldb since it was missing.
+2024/01/18-23:58:11.071 2ce0 Reusing MANIFEST D:\A2M\luxo\expresso\tokens\Expresso\Default\Local Storage\leveldb/MANIFEST-000001

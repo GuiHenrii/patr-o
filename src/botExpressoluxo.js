@@ -1,5 +1,5 @@
 // Funcionais
-const venom = require("venom-bot");
+const Connect = require("@wppconnect-team/wppconnect");
 const fs = require("fs");
 const moment = require("moment");
 const path = require("path");
@@ -50,33 +50,9 @@ function salvaContato(tempObj) {
   dialogoreiniciar(client, mess);
 }
 function start(client) {
-  console.log("Cliente Venom iniciado!");
+  console.log("Cliente iniciado e conectado!");
   // Inicio atendimento
   const atendimento = {};
-
-  // schedule.scheduleJob("*/15 * * * * *", async () => {
-  //   const cliente = await Cliente.findAll();
-  //   if (!cliente) {
-  //     console.log("Não tem cliente cadastrado");
-  //     return;
-  //   }else{
-  //for (const cliente of cliente){
-  // const horaUltimoMensagem = new Date(cliente.date * 1000);
-  // console.log(horaUltimoMensagem);
-  // const horaFormatada = horaUltimoMensagem.getHours();
-  // // Adicionar 5 minutos à horaUltimoMensagem
-  // const deu5Minutos = horaUltimoMensagem.setMinutes(
-  //   horaUltimoMensagem.getMinutes() + 5
-  // );
-  //
-  // // Verifica se já se passaram 5 minutos
-
-  // if (horaFormatada >= deu5Minutos) {
-  //   reiniciarAtendimento();
-  //   return;
-  // }
-  // }
-  // });
 
   client.onMessage(async (message) => {
     if (message.from === "status@broadcast") {
@@ -322,7 +298,7 @@ function start(client) {
   });
 }
 
-venom
+Connect
   .create({
     session: "Expresso", //name of session
   })
