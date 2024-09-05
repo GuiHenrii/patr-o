@@ -1,0 +1,29 @@
+2024/09/05-01:27:34.805 3d04 Reusing MANIFEST D:\PROJETOS BOT\Patrão\Patrão\tokens\Patrão Phone\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2024/09/05-01:27:34.807 3d04 Recovering log #586
+2024/09/05-01:27:34.830 3d04 Reusing old log D:\PROJETOS BOT\Patrão\Patrão\tokens\Patrão Phone\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000586.log 
+2024/09/05-01:27:36.141 3bd8 Level-0 table #599: started
+2024/09/05-01:27:36.220 3bd8 Level-0 table #599: 432803 bytes OK
+2024/09/05-01:27:36.252 3bd8 Delete type=0 #586
+2024/09/05-01:27:36.253 3bd8 Manual compaction at level-0 from '\x009\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00:\x00\x00\x00' @ 0 : 0; will stop at (end)
+2024/09/05-01:27:37.570 32c0 Compacting 1@1 + 9@2 files
+2024/09/05-01:27:37.894 32c0 Generated table #600@1: 49839 keys, 2208604 bytes
+2024/09/05-01:27:38.128 32c0 Generated table #601@1: 16704 keys, 2176013 bytes
+2024/09/05-01:27:38.342 32c0 Generated table #602@1: 2547 keys, 2158512 bytes
+2024/09/05-01:27:38.536 32c0 Generated table #603@1: 25738 keys, 2247424 bytes
+2024/09/05-01:27:38.689 32c0 Generated table #604@1: 16028 keys, 2155805 bytes
+2024/09/05-01:27:38.883 32c0 Generated table #605@1: 52066 keys, 2187349 bytes
+2024/09/05-01:27:39.125 32c0 Generated table #606@1: 110089 keys, 2261380 bytes
+2024/09/05-01:27:39.370 32c0 Generated table #607@1: 110629 keys, 2261289 bytes
+2024/09/05-01:27:39.509 32c0 Generated table #608@1: 61447 keys, 1258256 bytes
+2024/09/05-01:27:39.509 32c0 Compacted 1@1 + 9@2 files => 18914632 bytes
+2024/09/05-01:27:39.552 32c0 compacted to: files[ 0 0 9 0 0 0 0 ]
+2024/09/05-01:27:39.552 32c0 Delete type=2 #588
+2024/09/05-01:27:39.552 32c0 Delete type=2 #589
+2024/09/05-01:27:39.552 32c0 Delete type=2 #590
+2024/09/05-01:27:39.552 32c0 Delete type=2 #591
+2024/09/05-01:27:39.552 32c0 Delete type=2 #592
+2024/09/05-01:27:39.552 32c0 Delete type=2 #593
+2024/09/05-01:27:39.552 32c0 Delete type=2 #594
+2024/09/05-01:27:39.552 32c0 Delete type=2 #595
+2024/09/05-01:27:39.552 32c0 Delete type=2 #596
+2024/09/05-01:27:39.552 32c0 Delete type=2 #599

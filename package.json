@@ -5,21 +5,18 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --ignore atendimentos.json ./src/botExpressoluxo.js"
+    "start": "nodemon --ignore atendimentos.json ./src/index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@wppconnect-team/wppconnect": "^1.28.4",
-    "chrome-launcher": "^1.1.0",
-    "moment": "^2.29.4",
     "mysql": "^2.18.1",
     "mysql2": "^3.5.1",
+    "node-cron": "^3.0.3",
     "node-schedule": "^2.1.1",
     "nodemon": "^2.0.22",
     "schedule": "^0.5.0",
     "sequelize": "^6.32.1",
-    "sharp": "^0.33.0",
     "venom-bot": "^5.0.21"
   }
 }
