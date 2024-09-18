@@ -1,5 +1,5 @@
 // index.js
-const venom = require('venom-bot');
+const Connect = require("@wppconnect-team/wppconnect");
 const cron = require('node-cron');
 const conn = require("./db/conn");
 const Cliente = require("./models/chat.js");
@@ -7,89 +7,151 @@ const updateStage = require("./functions/stage.js");
 const dialogoinicio = require("./dialogs/dialogoinicio.js");
 const dialogoencerra = require("./dialogs/dialogoencerra.js");
 const dialogoatendente = require("./dialogs/dialogoatendente.js");
-
 const moment = require("moment");
 const dialogoloc = require('./dialogs/Dialogoloc.js');
 const processedMessages = new Set();
 
+// Lista de números restritos
+const restrictedNumbers = [
+  "556492413336",  // Número já existente
+  "556281081584",   // Novo número restrito
+  "556282885001",   // Novo número restrito
+  "556291877310"    // Novo número restrito
+];
+
+let botInstance;
+
 async function startBot() {
   try {
-    const client = await venom.create({ session: "Patrão Phone" });
+    const client = await Connect.create({ session: "Patrão Phone" });
+    botInstance = client;
     console.log("Bot iniciado!");
 
     client.onMessage(async (message) => {
-      if (processedMessages.has(message.id.toString())) {
-        console.log("Mensagem repetida. Ignorando...");
-        return;
-      }
+      try {
+        // Formata o número de telefone para verificar se está na lista de restritos
+        const formattedNumber = message.from.replace(/@c\.us/g, "");
 
-      processedMessages.add(message.id.toString());
+        if (restrictedNumbers.includes(formattedNumber)) {
+          console.log(`Mensagem recebida de número restrito (${formattedNumber}). Ignorando completamente...`);
+          return;
+        }
 
-      if (message.from === "status@broadcast" || message.isGroupMsg) {
-        console.log("Mensagem de lista de transmissão ou grupo. Ignorando...");
-        return;
-      }
+        // Verifica se a mensagem já foi processada
+        if (processedMessages.has(message.id.toString())) {
+          console.log("Mensagem repetida. Ignorando...");
+          return;
+        }
 
-      const startTime = moment().set({ hour: 1, minute: 10, second: 0 }); // Hora de início do expediente
-      const endTime = moment().set({ hour: 18, minute: 0, second: 0 }); // Hora de fim do expediente
+        // Adiciona a mensagem ao conjunto de mensagens processadas
+        processedMessages.add(message.id.toString());
 
-      if (!moment().isBetween(startTime, endTime)) {
-        console.log("Mensagem recebida fora do horário permitido.");
-        await client.sendText(message.from, "Estamos fora do nosso horário de expediente. Nosso horário de atendimento é das 08:00 às 18:00. Por favor, entre em contato durante esse horário.");
-        return;
-      }
+        // Ignora mensagens de lista de transmissão ou grupos
+        if (message.from === "status@broadcast" || message.isGroupMsg) {
+          console.log("Mensagem de lista de transmissão ou grupo. Ignorando...");
+          return;
+        }
 
+        // Verifica se a mensagem foi recebida dentro do horário de atendimento
+        const startTime = moment().set({ hour: 8, minute: 0, second: 0 });
+        const endTime = moment().set({ hour: 18, minute: 0, second: 0 });
 
-      const tel = message.from.replace(/@c\.us/g, "");
-      let cliente = await Cliente.findOne({ raw: true, where: { telefone: tel } });
+        if (!moment().isBetween(startTime, endTime)) {
+          console.log("Mensagem recebida fora do horário permitido.");
+          await client.sendText(
+            message.from,
+            "Estamos fora do nosso horário de expediente. Nosso horário de atendimento é das 08:00 às 18:00. Por favor, entre em contato durante esse horário."
+          );
+          return;
+        }
 
-      if (!cliente) {
-        console.log("Novo atendimento criado");
-        const dados = {
-          nome: message.notifyName,
-          telefone: tel,
-          assunto: "contato Whatsapp",
-          atendido: 1,
-          stage: 1,
-          date: message.timestamp,
-        };
-        const novoCliente = await Cliente.create(dados);
-        dialogoinicio(client, message);
-        updateStage(novoCliente.id, 2, message.timestamp);
-      } else if (message.body && cliente.stage === 1) {
-        dialogoinicio(client, message);
-        updateStage(cliente.id, 2, message.timestamp);
-      } else if (message.body === "1" && cliente.stage === 2) {
-        dialogoatendente(client, message);
-        updateStage(cliente.id, 170, message.timestamp);
-      } else if (message.body === "2" && cliente.stage === 2) {
-        dialogoatendente(client, message);
-        updateStage(cliente.id, 170, message.timestamp);
-      } else if (message.body === "3" && cliente.stage === 2) {
-        dialogoloc(client, message);
-        updateStage(cliente.id, 2, message.timestamp);
-      } else if (message.body === "4" && cliente.stage === 2) {
-        dialogoatendente(client, message);
-        updateStage(cliente.id, 170, message.timestamp);
-      } else if (message.body === "8" && cliente.stage === 2) {
-        dialogoencerra(client, message);
-        updateStage(cliente.id, 170, message.timestamp);
+        // Processamento de novas mensagens de clientes
+        const tel = formattedNumber;
+        let cliente = await Cliente.findOne({ raw: true, where: { telefone: tel } });
+
+        if (!cliente) {
+          console.log("Novo atendimento criado");
+          const dados = {
+            nome: message.notifyName,
+            telefone: tel,
+            assunto: "contato Whatsapp",
+            atendido: 1,
+            stage: 1,
+            date: message.timestamp,
+          };
+          const novoCliente = await Cliente.create(dados);
+          dialogoinicio(client, message);
+          updateStage(novoCliente.id, 2, message.timestamp);
+        } else if (message.body && cliente.stage === 1) {
+          dialogoinicio(client, message);
+          updateStage(cliente.id, 2, message.timestamp);
+        } else {
+          // Lógica para diferentes estágios e diálogos
+          handleDialogs(client, message, cliente);
+        }
+      } catch (error) {
+        console.error('Erro ao processar a mensagem:', error);
       }
     });
 
-   // Agendamento para reiniciar o banco de dados a cada 3 horas
-   cron.schedule('0 */3 * * *', async () => {
-    try {
-      await conn.sync({ force: true });
-      console.log('Banco de dados reiniciado com sucesso!');
-    } catch (error) {
-      console.error('Erro ao reiniciar o banco de dados:', error);
-    }
-  });
+    // Agendamento para reiniciar o banco de dados a cada 58 minutos
+    cron.schedule('*/58 * * * *', async () => {
+      try {
+        console.log("Reiniciando o banco de dados...");
+        await conn.sync({ force: true });
+        console.log('Banco de dados reiniciado com sucesso!');
+      } catch (error) {
+        console.error('Erro ao reiniciar o banco de dados:', error);
+      }
+    });
 
-} catch (error) {
-  console.error('Erro ao iniciar o bot:', error);
+    // Agendamento para reiniciar o bot a cada 1 hora
+    cron.schedule('0 * * * *', async () => {
+      console.log("Reiniciando o bot...");
+      await restartBot();
+    });
+
+  } catch (error) {
+    console.error('Erro ao iniciar o bot:', error);
+  }
 }
+
+// Função para lidar com diálogos de acordo com o estágio do cliente
+function handleDialogs(client, message, cliente) {
+  if (message.body === "1" && cliente.stage === 2) {
+    dialogoatendente(client, message);
+    updateStage(cliente.id, 170, message.timestamp);
+  } else if (message.body === "2" && cliente.stage === 2) {
+    dialogoatendente(client, message);
+    updateStage(cliente.id, 170, message.timestamp);
+  } else if (message.body === "3" && cliente.stage === 2) {
+    dialogoloc(client, message);
+    updateStage(cliente.id, 2, message.timestamp);
+  } else if (message.body === "4" && cliente.stage === 2) {
+    dialogoatendente(client, message);
+    updateStage(cliente.id, 170, message.timestamp);
+  } else if (message.body === "8" && cliente.stage === 2) {
+    dialogoencerra(client, message);
+    updateStage(cliente.id, 170, message.timestamp);
+  }
 }
+
+// Função para reiniciar o bot
+async function restartBot() {
+  try {
+    console.log("Reiniciando bot...");
+    if (botInstance) {
+      await botInstance.close();
+    }
+    startBot(); // Reinicia o bot
+  } catch (error) {
+    console.error("Erro ao reiniciar o bot:", error);
+  }
+}
+
+conn
+  .sync()
+  .then(() => console.log('Conexão com o banco de dados estabelecida.'))
+  .catch((err) => console.log('Erro ao conectar ao banco de dados:', err));
 
 startBot();
