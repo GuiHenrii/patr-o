@@ -11,15 +11,26 @@ const moment = require("moment");
 const dialogoloc = require('./dialogs/Dialogoloc.js');
 const processedMessages = new Set();
 
-// Lista de números restritos
+const inactiveDuration = 30 * 60 * 1000; // 30 minutos em milissegundos
+const userActivity = new Map();
+
 const restrictedNumbers = [
-  "556492413336",  // Número já existente
-  "556281081584",   // Novo número restrito
-  "556282885001",   // Novo número restrito
-  "556291877310"    // Novo número restrito
+  "556281081584",
+  "556282885001",
+  "556291877310"
 ];
 
 let botInstance;
+
+process.on('uncaughtException', (err) => {
+  console.error('Erro não tratado:', err);
+  restartBot();
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Rejeição não tratada em Promise:', promise, 'Razão:', reason);
+  restartBot();
+});
 
 async function startBot() {
   try {
@@ -29,51 +40,44 @@ async function startBot() {
 
     client.onMessage(async (message) => {
       try {
-        // Formata o número de telefone para verificar se está na lista de restritos
+        logMessageTime(message);
+        updateUserActivity(message.from);
+
         const formattedNumber = message.from.replace(/@c\.us/g, "");
 
         if (restrictedNumbers.includes(formattedNumber)) {
-          console.log(`Mensagem recebida de número restrito (${formattedNumber}). Ignorando completamente...`);
+          console.log(`Mensagem de número restrito (${formattedNumber}). Ignorando...`);
           return;
         }
 
-        // Verifica se a mensagem já foi processada
         if (processedMessages.has(message.id.toString())) {
           console.log("Mensagem repetida. Ignorando...");
           return;
         }
 
-        // Adiciona a mensagem ao conjunto de mensagens processadas
         processedMessages.add(message.id.toString());
 
-        // Ignora mensagens de lista de transmissão ou grupos
         if (message.from === "status@broadcast" || message.isGroupMsg) {
-          console.log("Mensagem de lista de transmissão ou grupo. Ignorando...");
+          console.log("Mensagem de grupo ou lista. Ignorando...");
           return;
         }
 
-        // Verifica se a mensagem foi recebida dentro do horário de atendimento
-        const startTime = moment().set({ hour: 8, minute: 0, second: 0 });
-        const endTime = moment().set({ hour: 18, minute: 0, second: 0 });
+        const startTime = moment().set({ hour: 8, minute: 30, second: 0 });
+        const endTime = moment().set({ hour: 18, minute: 30, second: 0 });
 
         if (!moment().isBetween(startTime, endTime)) {
-          console.log("Mensagem recebida fora do horário permitido.");
-          await client.sendText(
-            message.from,
-            "Estamos fora do nosso horário de expediente. Nosso horário de atendimento é das 08:00 às 18:00. Por favor, entre em contato durante esse horário."
-          );
+          console.log("Mensagem fora do horário de atendimento.");
           return;
         }
 
-        // Processamento de novas mensagens de clientes
         const tel = formattedNumber;
-        let cliente = await Cliente.findOne({ raw: true, where: { telefone: tel } });
+        let cliente = await Cliente.findOne({ raw: true, where: { telefone: tel + '@c.us' } }); // Adicionando @c.us na busca
 
         if (!cliente) {
           console.log("Novo atendimento criado");
           const dados = {
             nome: message.notifyName,
-            telefone: tel,
+            telefone: tel + '@c.us', // Adicionando @c.us ao número
             assunto: "contato Whatsapp",
             atendido: 1,
             stage: 1,
@@ -86,7 +90,6 @@ async function startBot() {
           dialogoinicio(client, message);
           updateStage(cliente.id, 2, message.timestamp);
         } else {
-          // Lógica para diferentes estágios e diálogos
           handleDialogs(client, message, cliente);
         }
       } catch (error) {
@@ -94,29 +97,54 @@ async function startBot() {
       }
     });
 
-    // Agendamento para reiniciar o banco de dados a cada 58 minutos
-    cron.schedule('*/58 * * * *', async () => {
-      try {
-        console.log("Reiniciando o banco de dados...");
-        await conn.sync({ force: true });
-        console.log('Banco de dados reiniciado com sucesso!');
-      } catch (error) {
-        console.error('Erro ao reiniciar o banco de dados:', error);
+    // Verifica inatividade a cada 1 minuto
+    setInterval(async () => {
+      const now = Date.now();
+      for (const [number, lastActivity] of userActivity) {
+        if (now - lastActivity > inactiveDuration) {
+          console.log(`Encerrando atendimento para o número ${number} devido à falta de interação.`);
+          await handleInactiveUser(client, number);
+        }
       }
-    });
-
-    // Agendamento para reiniciar o bot a cada 1 hora
-    cron.schedule('0 * * * *', async () => {
-      console.log("Reiniciando o bot...");
-      await restartBot();
-    });
+    }, 60000); // 1 minuto
 
   } catch (error) {
     console.error('Erro ao iniciar o bot:', error);
+    restartBot(); // Reinicia se houver erro
   }
 }
 
-// Função para lidar com diálogos de acordo com o estágio do cliente
+function updateUserActivity(number) {
+  console.log(`Atualizando atividade do usuário: ${number}`);
+  userActivity.set(number, Date.now());
+}
+
+async function handleInactiveUser(client, number) {
+  try {
+    console.log(`Tratando inatividade para o número: ${number}`);
+    
+    // Adiciona @c.us ao número para fazer a busca
+    const fullNumber = number.includes('@c.us') ? number : number + '@c.us';
+    
+    const deletedRows = await Cliente.destroy({ where: { telefone: fullNumber } });
+    
+    console.log(`Tentativa de remover atendimento para ${fullNumber}. Linhas deletadas: ${deletedRows}`);
+    
+    if (deletedRows > 0) {
+      console.log(`Atendimento para ${fullNumber} removido do banco de dados.`);
+      const message = `Devido a falta de interação, estou encerrando nosso atendimento.`;
+      await client.sendText(fullNumber, message);
+    } else {
+      console.log(`Nenhum atendimento encontrado para ${fullNumber}.`);
+    }
+
+    userActivity.delete(number);
+  } catch (error) {
+    console.error(`Erro ao tratar inatividade do usuário ${number}:`, error);
+  }
+}
+
+
 function handleDialogs(client, message, cliente) {
   if (message.body === "1" && cliente.stage === 2) {
     dialogoatendente(client, message);
@@ -136,14 +164,25 @@ function handleDialogs(client, message, cliente) {
   }
 }
 
-// Função para reiniciar o bot
+function logMessageTime(message) {
+  const messageTime = moment.unix(message.timestamp).format('DD-MM-YYYY HH:mm:ss');
+  console.log(`Mensagem recebida às: ${messageTime}\n${message.notifyName}\n`);
+}
+
 async function restartBot() {
   try {
     console.log("Reiniciando bot...");
+
     if (botInstance) {
       await botInstance.close();
+      console.log("Instância do cliente fechada.");
     }
-    startBot(); // Reinicia o bot
+
+    setTimeout(() => {
+      console.log("Reiniciando a aplicação...");
+      process.exit(0);
+    }, 2000);
+
   } catch (error) {
     console.error("Erro ao reiniciar o bot:", error);
   }
