@@ -1,4 +1,3 @@
-// index.js
 const Connect = require("@wppconnect-team/wppconnect");
 const cron = require('node-cron');
 const conn = require("./db/conn");
@@ -10,8 +9,9 @@ const dialogoatendente = require("./dialogs/dialogoatendente.js");
 const moment = require("moment");
 const dialogoloc = require('./dialogs/Dialogoloc.js');
 const processedMessages = new Set();
+const path = require('path');
 
-const inactiveDuration = 30 * 60 * 1000; // 30 minutos em milissegundos
+const inactiveDuration = 30 * 60 * 1000; // 30 segundos em milissegundos
 const userActivity = new Map();
 
 const restrictedNumbers = [
@@ -34,7 +34,12 @@ process.on('unhandledRejection', (reason, promise) => {
 
 async function startBot() {
   try {
-    const client = await Connect.create({ session: "Patrão Phone" });
+    const client = await Connect.create({
+      session: "Patrão Phone",
+      folderNameToken: path.join(__dirname, 'tokens'), // Define um caminho seguro para armazenar tokens
+      catchQR: (qrCode) => console.log("QR recebido, escaneie para continuar", qrCode),
+      puppeteerOptions: { args: ['--no-sandbox', '--disable-setuid-sandbox'] } // Corrige possíveis problemas de permissão
+    });
     botInstance = client;
     console.log("Bot iniciado!");
 
@@ -63,7 +68,7 @@ async function startBot() {
         }
 
         const startTime = moment().set({ hour: 8, minute: 30, second: 0 });
-        const endTime = moment().set({ hour: 18, minute: 30, second: 0 });
+        const endTime = moment().set({ hour: 23, minute: 59, second: 0 });
 
         if (!moment().isBetween(startTime, endTime)) {
           console.log("Mensagem fora do horário de atendimento.");
@@ -71,13 +76,13 @@ async function startBot() {
         }
 
         const tel = formattedNumber;
-        let cliente = await Cliente.findOne({ raw: true, where: { telefone: tel + '@c.us' } }); // Adicionando @c.us na busca
+        let cliente = await Cliente.findOne({ raw: true, where: { telefone: tel + '@c.us' } });
 
         if (!cliente) {
           console.log("Novo atendimento criado");
           const dados = {
             nome: message.notifyName,
-            telefone: tel + '@c.us', // Adicionando @c.us ao número
+            telefone: tel + '@c.us',
             assunto: "contato Whatsapp",
             atendido: 1,
             stage: 1,
@@ -97,7 +102,7 @@ async function startBot() {
       }
     });
 
-    // Verifica inatividade a cada 1 minuto
+    // Verifica inatividade a cada 1 segundo
     setInterval(async () => {
       const now = Date.now();
       for (const [number, lastActivity] of userActivity) {
@@ -106,7 +111,7 @@ async function startBot() {
           await handleInactiveUser(client, number);
         }
       }
-    }, 60000); // 1 minuto
+    }, 1000); // 1 segundo
 
   } catch (error) {
     console.error('Erro ao iniciar o bot:', error);
@@ -123,7 +128,6 @@ async function handleInactiveUser(client, number) {
   try {
     console.log(`Tratando inatividade para o número: ${number}`);
     
-    // Adiciona @c.us ao número para fazer a busca
     const fullNumber = number.includes('@c.us') ? number : number + '@c.us';
     
     const deletedRows = await Cliente.destroy({ where: { telefone: fullNumber } });
@@ -143,7 +147,6 @@ async function handleInactiveUser(client, number) {
     console.error(`Erro ao tratar inatividade do usuário ${number}:`, error);
   }
 }
-
 
 function handleDialogs(client, message, cliente) {
   if (message.body === "1" && cliente.stage === 2) {
@@ -165,7 +168,7 @@ function handleDialogs(client, message, cliente) {
 }
 
 function logMessageTime(message) {
-  const messageTime = moment.unix(message.timestamp).format('DD-MM-YYYY HH:mm:ss');
+  const messageTime = moment.unix(message.timestamp).format('HH:mm:ss DD-MM-YYYY');
   console.log(`Mensagem recebida às: ${messageTime}\n${message.notifyName}\n`);
 }
 

@@ -2,7 +2,7 @@
 
 // npm install -g pm2
 
-// pm2 start "D:\PROJETOS BOT\Patrão\patrão\index.js" --name "BotPatrao"
+// pm2 start "D:\PROJETOS BOT\Patrão\patrão\src\index.js" --name "BotPatrao"
  
 // pm2 list
  
